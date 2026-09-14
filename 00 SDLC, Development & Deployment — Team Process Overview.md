@@ -353,19 +353,19 @@ DEFINITION
     ↓
 REFINEMENT
     ↓
-OPEN
+  OPEN
     ↓
 IN PROGRESS
     ↓
 IN REVIEW
     ↓
-PREPARED
+ PREPARED
     ↓
 IN VERIFICATION
     ↓
-TESTED
+  TESTED
     ↓
-RELEASED
+ RELEASED
 ```
 Deployment is tracked separately:
 ```
@@ -703,3 +703,929 @@ CI runs again ─────┘
 ```
 
 Only after the required checks pass should the PR proceed toward merge.
+---
+
+## 22. Code Review
+
+A reviewer, generally a senior or designated reviewer, reviews the PR.
+
+The reviewer checks:
+
+- Correctness
+- Requirement compliance
+- Code quality
+- Architecture
+- Security
+- Error handling
+- Tests
+- Performance considerations
+- Maintainability
+- Potential regressions
+
+The reviewer may:
+
+- Approve
+- Request Changes
+- Comment
+
+---
+
+## 23. Merge Conflicts
+
+The PR should continuously be checked against develop.
+
+If develop changes while the feature is being developed, a conflict may occur.
+
+GitHub should clearly indicate when the branch cannot be cleanly merged.
+
+The developer should update the feature branch:
+
+```
+git fetch origin
+git checkout feature/123-user-registration
+git merge origin/develop
+```
+
+The developer resolves conflicts locally and pushes the changes.
+
+CI should run again after conflict resolution.
+
+The expected process is:
+
+```
+PR
+ ↓
+develop changes
+ ↓
+Conflict detected
+ ↓
+Developer updates branch
+ ↓
+Conflict resolved
+ ↓
+CI runs again
+ ↓
+CI passes
+ ↓
+Review
+ ↓
+Merge
+```
+
+The team should intentionally practice this process at least once.
+
+---
+
+## 24. Merge Requirements
+
+A Pull Request can be merged only when all required conditions are satisfied.
+
+Minimum requirements:
+
+- ✓ Required CI checks passed
+- ✓ Required reviewer approval received
+- ✓ Merge conflicts resolved
+- ✓ Required discussions resolved
+- ✓ Feature is ready for integration
+
+After merge:
+
+`IN REVIEW` $\rightarrow$ `PREPARED`
+
+---
+
+## 25. Step 6 — Prepared
+
+PREPARED means:
+
+The feature has successfully passed development, review, CI, and merge, and is now available for deployment to staging.
+
+The code now exists in develop.
+
+The staging deployment process starts automatically or through the defined deployment trigger.
+
+---
+
+## 26. Staging Deployment
+
+The expected flow:
+
+```
+develop
+   ↓
+GitHub Actions
+   ↓
+Build
+   ↓
+Tests
+   ↓
+Package / Docker Image
+   ↓
+Deploy
+   ↓
+AWS EC2
+   ↓
+Staging
+```
+
+The staging server should represent a production-like environment.
+
+---
+
+## 27. Staging Environment
+
+The initial staging architecture may be:
+
+```
+                 Internet
+                    │
+                    ▼
+                  Nginx
+                    │
+                    ▼
+             Django / Gunicorn
+                    │
+                    ▼
+               PostgreSQL
+```
+
+Docker may be used to package the application and its supporting services.
+
+The exact architecture may evolve as the team learns.
+
+---
+
+## 28. Step 7 — In Verification
+
+Once the feature is successfully deployed to staging:
+
+`PREPARED` $\rightarrow$ `IN VERIFICATION`
+
+Testers begin testing the feature against the acceptance criteria.
+
+Testing should verify:
+
+- Functional behavior
+- Acceptance criteria
+- Validation
+- Error scenarios
+- Integration with existing functionality
+- Regression scenarios
+- API behavior where applicable
+- UI behavior where applicable
+
+---
+
+## 29. Defects During Verification
+
+If testing finds a defect, the feature should not be marked as tested.
+
+> Example:
+> 
+> ```
+> IN VERIFICATION
+>       ↓
+> Defect found
+>       ↓
+> Developer fixes defect
+>       ↓
+> 	 PR / CI
+>       ↓
+>	    Merge
+>       ↓
+> Staging deployment
+>       ↓
+> Verification again
+> ```
+
+The team should document defects clearly.
+
+A defect should include:
+
+- Expected behavior
+- Actual behavior
+- Steps to reproduce
+- Environment
+- Relevant logs/screenshots
+- Severity/Priority
+
+---
+
+## 30. Step 8 — Tested
+
+When QA confirms that the feature satisfies the requirements:
+
+`IN VERIFICATION` $\rightarrow$ `TESTED`
+
+The ticket should record:
+
+```
+Environment: Staging
+
+Result: PASS
+
+Tested By: <team member>
+
+Build/Version: <version>
+
+Defects: None
+```
+
+The feature is now eligible for inclusion in a production release.
+
+---
+
+## 31. Release Management
+
+Features should not necessarily be deployed to production individually.
+
+Instead, related tested features can be grouped into a release.
+
+> Example:
+> 
+> ```
+> Feature A ─┐
+> Feature B ─┼──→ Staging ─→ QA ─→ Release
+> Feature C ─┘
+> ```
+
+A release may contain:
+
+```
+v1.0.0
+v1.1.0
+v1.2.0
+```
+
+Production should always have an identifiable version.
+
+---
+
+## 32. Production Release
+
+Before production deployment:
+
+- ✓ Required features tested
+- ✓ CI passed
+- ✓ Staging verification passed
+- ✓ Release scope agreed
+- ✓ Production configuration available
+- ✓ Database migrations reviewed
+- ✓ Deployment plan ready
+- ✓ Rollback plan understood
+
+The production deployment pipeline then runs.
+
+---
+
+## 33. Production CI/CD
+
+The production deployment flow should eventually look like:
+
+```
+Release
+   ↓
+Production CI
+   │
+   ├── Tests
+   ├── Build
+   ├── Security checks
+   └── Deployment validation
+          │
+          ▼
+       Approval
+          │
+          ▼
+     Production
+          │
+          ▼
+       AWS EC2
+```
+
+Production deployment should be protected by appropriate permissions/approval.
+
+---
+
+## 34. Versioning
+
+Production deployments should use version tags.
+
+> Example:
+> 
+>```bash
+> git tag v1.0.0
+> git push origin v1.0.0
+> ```
+
+Future releases:
+
+```
+v1.0.0
+v1.1.0
+v1.2.0
+v1.3.0
+```
+
+This makes it possible to identify exactly what version is deployed.
+
+> Example:
+>
+> ```
+> Production
+> Version: v1.3.0
+> Commit: 82f91ab
+> ```
+
+---
+
+## 35. Database Migration During Deployment
+
+When a release contains database changes:
+
+```
+Application Release
+       +
+Database Migration
+       ↓
+    Staging
+       ↓
+  Verification
+       ↓
+   Production
+```
+
+Production deployment must include a controlled migration strategy.
+
+> Example:
+> 
+> `python manage.py migrate`
+
+Database migration behavior should be tested in staging before production.
+
+---
+
+## 36. Rollback
+
+Every production deployment should have a rollback strategy.
+
+> Example:
+> 
+> ```
+> Production
+>     │
+>     ▼
+>  v1.4.0
+>     │
+>     ▼
+> Application failure
+>     │
+>     ▼
+>  Rollback
+>     │
+>     ▼
+>  v1.3.0
+> ```
+
+Docker image versioning can make application rollback easier.
+
+Rollback procedures should eventually be documented in a separate runbook.
+
+---
+
+## 37. Secrets and Configuration
+
+Secrets must never be committed to GitHub.
+
+Never commit:
+
+- SECRET_KEY
+- DATABASE_PASSWORD
+- API_KEY
+- AWS_SECRET_ACCESS_KEY
+- EMAIL_PASSWORD
+
+The repository should contain:
+
+`.env.example`
+
+but not:
+
+`.env`
+
+The `.env` file should be excluded using `.gitignore`.
+
+Production and staging should have separate secrets/configuration.
+
+---
+
+## 38. GitHub Project Board
+
+The GitHub Project board will be the primary visual representation of feature/bug progress.
+
+Recommended workflow:
+
+```
+DEFINITION
+    ↓
+REFINEMENT
+    ↓
+OPEN
+    ↓
+IN PROGRESS
+    ↓
+IN REVIEW
+    ↓
+PREPARED
+    ↓
+IN VERIFICATION
+    ↓
+TESTED
+    ↓
+RELEASED
+```
+
+Deployment status may be tracked separately.
+
+> Example:
+> 
+> ```
+> Feature Status: TESTED
+> 
+> Deployment:
+>   Staging: Verified
+>   Production: Pending
+> ```
+
+---
+
+## 39. Issues
+
+Every meaningful feature or defect should have a GitHub Issue.
+
+> Example:
+> 
+> \#123 Implement User Registration
+
+The Issue should contain:
+
+- Requirement
+- Acceptance Criteria
+- Specification
+- HOW
+- Estimation
+- Testing information
+- Deployment considerations
+
+The Pull Request should reference the Issue.
+
+This creates traceability:
+
+```
+Requirement
+    ↓
+Issue #123
+    ↓
+ Branch
+    ↓
+ PR #145
+    ↓
+Commit(s)
+    ↓
+   CI
+    ↓
+  Merge
+    ↓
+ Staging
+    ↓
+   QA
+    ↓
+ Release
+```
+
+---
+
+## 40. Documentation
+
+The repository should contain a docs directory.
+
+Suggested structure:
+
+```
+docs/
+├── 01-git.md
+├── 02-github-workflow.md
+├── 03-development.md
+├── 04-code-review.md
+├── 05-ci.md
+├── 06-docker.md
+├── 07-aws-ec2.md
+├── 08-staging-deployment.md
+├── 09-production-deployment.md
+├── 10-database-migrations.md
+├── 11-rollback.md
+└── 12-troubleshooting.md
+```
+
+Documentation should explain both:
+
+**WHAT** we are doing
+
+and:
+
+**WHY** we are doing it
+
+---
+
+## 41. Team Responsibilities
+
+The project should have defined responsibilities, but roles should rotate because this is a learning exercise.
+
+Possible responsibilities:
+
+- Feature Developer
+- Code Reviewer
+- Tester / QA
+- DevOps / Deployment Owner
+- Release Coordinator
+
+The same person should not permanently perform the same role.
+
+> Example:
+> 
+> - Sprint 1
+>   - Developer A → Feature
+>   - Developer B → Reviewer
+>   - Developer C → QA
+>   - Developer D → Deployment
+> 
+> - Sprint 2
+>   - Developer B → Feature
+>   - Developer C → Reviewer
+>   - Developer D → QA
+>   - Developer A → Deployment
+
+The goal is for everyone to understand the complete lifecycle.
+
+---
+
+## 42. Failure Scenarios We Should Intentionally Practice
+
+Because this is a learning project, we should not avoid failures completely.
+
+We should intentionally practice:
+
+- Git
+- Merge conflict
+- Incorrect commit
+- Reverting a commit
+- Branch synchronization
+- Pull Request
+- Review rejection
+- Requested changes
+- CI failure
+- Outdated branch
+- CI/CD
+- Test failure
+- Lint failure
+- Build failure
+- Deployment failure
+- Database
+- Migration failure
+- Incorrect migration
+- Rollback considerations
+- AWS
+- Application not reachable
+- Incorrect security group
+- Incorrect environment variable
+- Nginx configuration issue
+- Gunicorn/container failure
+- Production
+- Failed deployment
+- Rollback
+- Log investigation
+
+The purpose is to understand how real systems behave when things go wrong.
+
+---
+
+## 43. Initial Learning Roadmap
+
+We will implement the system incrementally.
+
+### Milestone 1 — Git Fundamentals
+
+Learn:
+
+- clone
+- add
+- commit
+- push
+- pull
+- branch
+- merge
+- rebase
+- diff
+- log
+
+### Milestone 2 — GitHub
+
+Learn:
+
+- Repository
+- Issues
+- Projects
+- Pull Requests
+- Reviews
+- Branch protection
+- Tags
+- Releases
+
+### Milestone 3 — Django
+
+Build a small application.
+
+Learn:
+
+- Models
+- Views
+- URLs
+- Templates / APIs
+- Forms / serializers
+- Migrations
+- Authentication
+- Testing
+- Settings
+
+### Milestone 4 — Development Workflow
+
+Implement:
+
+```
+Definition
+ ↓
+Refinement
+ ↓
+Estimation
+ ↓
+Open
+ ↓
+Feature branch
+ ↓
+Development
+ ↓
+PR
+ ↓
+Review
+ ↓
+CI
+ ↓
+Merge
+```
+
+### Milestone 5 — Docker
+
+Learn:
+
+- Dockerfile
+- Images
+- Containers
+- Volumes
+- Networks
+- Docker Compose
+
+Containerize the application.
+
+### Milestone 6 — AWS
+
+Start with a simple AWS EC2 instance.
+
+Learn:
+
+- EC2
+- SSH
+- Linux
+- Security Groups
+- Ports
+- Nginx
+- Docker
+- Logs
+
+### Milestone 7 — Staging
+
+Implement:
+
+```
+develop
+   ↓
+GitHub Actions
+   ↓
+ Build
+   ↓
+ Deploy
+   ↓
+AWS EC2
+   ↓
+Staging
+```
+
+### Milestone 8 — QA
+
+Test actual deployed features against acceptance criteria.
+
+### Milestone 9 — Production
+
+Introduce:
+
+```
+Release
+ ↓
+CI
+ ↓
+Approval
+ ↓
+Production
+ ↓
+Versioning
+ ↓
+Rollback
+```
+
+---
+
+## 44. Final End-to-End Process
+
+The complete expected lifecycle is:
+```
+
+                         REQUIREMENT
+                              │
+                              ▼
+                         DEFINITION
+                              │
+                              ▼
+                         REFINEMENT
+                              │
+                       ┌──────┴──────┐
+                       │             │
+                      HOW        Estimation
+                       │             │
+                       └──────┬──────┘
+                              │
+                        Team Review
+                              │
+                              ▼
+                            OPEN
+                              │
+                     Developer picks
+                              │
+                              ▼
+                         IN PROGRESS
+                              │
+                       Feature Branch
+                              │
+                       Development
+                              │
+                     Automated Tests
+                              │
+                              ▼
+                         PULL REQUEST
+                              │
+                ┌─────────────┼─────────────┐
+                │             │             │
+            Code Review       CI       Conflict Check
+                │             │             │
+                └─────────────┼─────────────┘
+                              │
+                    Approval + CI Pass
+                              │
+                              ▼
+                           MERGE
+                              │
+                              ▼
+                          PREPARED
+                              │
+                              ▼
+                     STAGING DEPLOYMENT
+                              │
+                              ▼
+                       IN VERIFICATION
+                              │
+                              ▼
+                         QA TESTING
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+                  PASS                FAIL
+                    │                   │
+                    ▼                   ▼
+                 TESTED             Fix Defect
+                    │                   │
+                    │                   └──→ Development
+                    │
+                    ▼
+                  RELEASE
+                    │
+                    ▼
+              PRODUCTION CI/CD
+                    │
+                    ▼
+               PRODUCTION
+                    │
+                    ▼
+                 VERSION
+                    │
+                    ▼
+              MONITOR / VERIFY
+```
+
+---
+
+## 45. Target Outcome
+
+At the end of this learning project, the team should be able to take a feature from:
+
+*"I have a requirement"*
+
+all the way to:
+
+*"The feature is safely running in production."*
+
+Every team member should understand the complete chain:
+
+```
+Business Requirement
+       ↓
+GitHub Issue
+       ↓
+   Refinement
+       ↓
+Technical Design
+       ↓
+  Estimation
+       ↓
+Feature Branch
+       ↓
+  Development
+       ↓
+Automated Tests
+       ↓
+  Pull Request
+       ↓
+  Code Review
+       ↓
+      CI
+       ↓
+     Merge
+       ↓
+  Docker Build
+       ↓
+Staging Deployment
+       ↓
+      QA
+       ↓
+    Release
+       ↓
+Production Deployment
+       ↓
+  Versioning
+       ↓
+   Monitoring
+       ↓
+Rollback / Troubleshooting
+```
+
+The project is considered successful when the team understands not only how to make the application work, but how professional software moves safely from an idea to production.
+
+---
+
+## 46. Next Documents
+
+This document is the high-level process overview.
+
+The following documents should be created progressively:
+
+```
+docs/
+│
+├── SDLC-OVERVIEW.md
+│
+├── 01-GIT-GUIDELINES.md
+├── 02-GITHUB-PROJECT-WORKFLOW.md
+├── 03-FEATURE-TICKET-GUIDELINES.md
+├── 04-REFINEMENT-GUIDELINES.md
+├── 05-BRANCHING-STRATEGY.md
+├── 06-COMMIT-GUIDELINES.md
+├── 07-PULL-REQUEST-GUIDELINES.md
+├── 08-CODE-REVIEW-GUIDELINES.md
+├── 09-CI-GUIDELINES.md
+├── 10-DOCKER-GUIDELINES.md
+├── 11-AWS-ENVIRONMENT.md
+├── 12-STAGING-DEPLOYMENT.md
+├── 13-QA-GUIDELINES.md
+├── 14-RELEASE-PROCESS.md
+├── 15-PRODUCTION-DEPLOYMENT.md
+├── 16-ROLLBACK-PROCESS.md
+└── 17-TROUBLESHOOTING.md
+```
+
+These documents should be developed as the team reaches each stage rather than attempting to implement the entire system at once.
